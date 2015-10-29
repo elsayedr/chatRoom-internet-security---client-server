@@ -24,10 +24,10 @@ class chat_client(object):
         # Initial prompt
         self.prompt = '[' + '@'.join((name, socket.gethostname().split('.')[0])) + ']> '
 
-        client_privkey = RSA.generate(4096, os.urandom)
-        client_pubkey = client_privkey.publickey()
+        client_privateKey = RSA.generate(4096, os.urandom)
+        client_pubkey = client_privateKey.publickey()
 
-        self.decryptor = client_privkey
+        self.decryptor = client_privateKey
 
         # Connect to server at port
         try:
@@ -38,7 +38,7 @@ class chat_client(object):
             send(self.sock, client_pubkey.exportKey())
             server_pubkey = receive(self.sock)
 
-            self.encryptor = RSA.importKey(server_pubkey)
+            self.encryptionKey = RSA.importKey(server_pubkey)
 
             # Send my name...
             send(self.sock, 'NAME: ' + self.name)
@@ -68,7 +68,7 @@ class chat_client(object):
 
                         try:
                             # encrypt
-                            data = self.encryptor.encrypt(data, 0)
+                            data = self.encryptionKey.encrypt(data, 0)
                             data = data[0]
 
                             # append signature

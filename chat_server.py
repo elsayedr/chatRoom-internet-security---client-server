@@ -1,5 +1,4 @@
 # -*- encoding: utf-8 -*-
-# just testing
 
 import os
 import select
@@ -31,8 +30,8 @@ class chat_server(object):
         self.server.bind((address, int(port)))
 
         print 'Generating RSA keys ...'
-        self.server_privkey = RSA.generate(4096, os.urandom)
-        self.server_publicKey = self.server_privkey.publickey()
+        self.server_privateKey = RSA.generate(4096, os.urandom)
+        self.server_publicKey = self.server_privateKey.publickey()
 
         print 'Listening to port', port, '...'
         self.server.listen(5)
@@ -60,16 +59,16 @@ class chat_server(object):
     def get_just_name(self, client):
         return self.clientmap[client][1]
 
-    def send_encrypted(self, to_who, message, name):
+    def sendEncryptedMsg(self, to_who, message, name):
         try:
-            encryptor = self.clientmap[to_who][2]
-            msg = encryptor.encrypt(message, 0)
+            encryptionKey = self.clientmap[to_who][2]
+            msg = encryptionKey.encrypt(message, 0)
             send(to_who, msg)
 
         except IOError:
             send(to_who, 'PLAIN: cannot find public key for: %s' % name)
 
-    def verify_signature(self, client, message, signature):
+    def verifySignature(self, client, message, signature):
         try:
             key = self.clientmap[client][2]
             msg_hash = SHA.new()
@@ -121,7 +120,7 @@ class chat_server(object):
 
                     for o in self.outputs:
                         try:
-                            self.send_encrypted(o, msg, self.get_just_name(o))
+                            self.sendEncryptedMsg(o, msg, self.get_just_name(o))
 
                         except socket.error:
                             self.outputs.remove(o)
@@ -144,8 +143,8 @@ class chat_server(object):
                             signature = dataparts[1]
                             data = dataparts[0]
 
-                            verified = self.verify_signature(s, data, signature)
-                            data = self.server_privkey.decrypt(data)
+                            verified = self.verifySignature(s, data, signature)
+                            data = self.server_privateKey.decrypt(data)
 
                             if data != '\x00':
                                 if verified:
@@ -157,11 +156,10 @@ class chat_server(object):
                                 # Send as new client's message...
                                 msg = '\n# [' + self.getName(s) + ']>> ' + data
 
-                                # Send data to all except ourselves
-
+                                # Send msg to all except ourselves
                                 for o in self.outputs:
                                     if o != s:
-                                        self.send_encrypted(o, msg, self.get_just_name(s))
+                                        self.sendEncryptedMsg(o, msg, self.get_just_name(s))
 
                         else:
 
@@ -171,14 +169,14 @@ class chat_server(object):
                             inputs.remove(s)
                             self.outputs.remove(s)
 
-                            # Send client leaving information to others
+                            # Send client-leaving information to others
                             msg = '\n(Hung up: Client from %s)' % self.getName(s)
 
                             for o in self.outputs:
-                                self.send_encrypted(o, msg, self.get_just_name(o))
+                                self.sendEncryptedMsg(o, msg, self.get_just_name(o))
 
                     except socket.error:
-                        # Remove
+                        # Remove the input causing error
                         inputs.remove(s)
                         self.outputs.remove(s)
 
