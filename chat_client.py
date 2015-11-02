@@ -4,6 +4,7 @@ import os
 import socket
 import sys
 import select
+import ssl
 
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
@@ -11,18 +12,25 @@ from Crypto.Hash import SHA
 
 from communication import send, receive
 
+import requests
+from OpenSSL import crypto
 
 class chat_client(object):
 
-    def __init__(self, name, host='127.0.0.1', port=3490):
+    def __init__(self, name):
         self.name = name
         # Quit flag
         self.flag = False
-        self.port = int(port)
-        self.host = host
+        self.port = 3490
+        self.host = 'localhost'
 
         # Initial prompt
         self.prompt = '[' + '@'.join((name, socket.gethostname().split('.')[0])) + ']> '
+
+        # Generate client certificate
+        print "Generating client certificate"
+        self.createClientCert(self.name)
+        print "Client certificate created"
 
         client_privateKey = RSA.generate(4096, os.urandom)
         client_pubkey = client_privateKey.publickey()
@@ -31,19 +39,31 @@ class chat_client(object):
 
         # Connect to server at port
         try:
+            self.context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+            self.context.verify_mode = ssl.CERT_REQUIRED
+            self.context.check_hostname = True
+
+            file_location = os.getcwd()
+            self.context.load_verify_locations(file_location + "/server.crt")
+
+            
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.connect((host, self.port))
+
+            # Check server certificate
+            self.ssl_sock = self.context.wrap_socket(self.sock, server_hostname=self.host)
+            self.ssl_sock.settimeout(2)
+
+            self.ssl_sock.connect((self.host, self.port))
             print 'Connected to chat server %s:%d' % (self.host, self.port)
             # Send my pubkey...
-            send(self.sock, client_pubkey.exportKey())
-            server_pubkey = receive(self.sock)
-
+            send(self.ssl_sock, client_pubkey.exportKey())
+            server_pubkey = receive(self.ssl_sock)
             self.encryptionKey = RSA.importKey(server_pubkey)
 
             # Send my name...
-            send(self.sock, 'NAME: ' + self.name)
-            data = receive(self.sock)
+            send(self.ssl_sock, 'NAME: ' + self.name)
 
+            data = receive(self.ssl_sock)
             # Contains client address, set it
             addr = data.split('CLIENT: ')[1]
             self.prompt = '[' + '@'.join((self.name, addr)) + ']> '
@@ -85,10 +105,10 @@ class chat_client(object):
                             data = None
 
                         if data:
-                            send(self.sock, data)
+                            send(self.ssl_sock, data)
 
                     elif i == self.sock:
-                        data = receive(self.sock)
+                        data = receive(self.ssl_sock)
 
                         if not data:
                             print 'Shutting down.'
@@ -111,11 +131,17 @@ class chat_client(object):
                 self.sock.close()
                 break
 
+    def createClientCert(self, name):
+        try:
+            os.system("python createClientCert.py %s" % name )
+        except IOError:
+            return False
+
 
 if __name__ == "__main__":
 
-    if len(sys.argv) < 3:
-        sys.exit('Usage: %s username host portno' % sys.argv[0])
+    if len(sys.argv) < 1:
+        sys.exit('Usage: %s username' % sys.argv[0])
 
-    client = chat_client(sys.argv[1], sys.argv[2], int(sys.argv[3]))
+    client = chat_client(sys.argv[1])
     client.cmdloop()

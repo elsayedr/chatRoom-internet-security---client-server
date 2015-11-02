@@ -10,13 +10,22 @@ from communication import send, receive
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
 from Crypto.Hash import SHA
+import ssl
 
 
 
 
 class chat_server(object):
+    def __init__(self):
+        self.address = 'localhost'
+        self.port = 3490
 
-    def __init__(self, address='127.0.0.1', port=3490):
+        print 'Generating Server Certificate...'
+        self.createServerCert()
+        print "Server certificate created"
+        self.context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        self.context.load_cert_chain(certfile="server.crt", keyfile="server.key")
+
         self.numOfClients = 0
 
         # Client map
@@ -27,13 +36,13 @@ class chat_server(object):
 
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.server.bind((address, int(port)))
+        self.server.bind((self.address, self.port))
 
         print 'Generating RSA keys ...'
         self.server_privateKey = RSA.generate(4096, os.urandom)
         self.server_publicKey = self.server_privateKey.publickey()
 
-        print 'Listening to port', port, '...'
+        print 'Listening to port', self.port, '...'
         self.server.listen(5)
 
         # Trap keyboard interrupts
@@ -80,6 +89,12 @@ class chat_server(object):
         except IOError:
             return False
 
+    def createServerCert(self):
+        try:
+            os.system("python createServerCert.py")
+        except IOError:
+            return False
+
     def serve(self):
         inputs = [self.server, sys.stdin]
         self.outputs = []
@@ -100,23 +115,25 @@ class chat_server(object):
                 if s == self.server:
                     # handle the server socket
                     client, address = self.server.accept()
+                    connstream = self.context.wrap_socket(client, server_side=True)
+
                     print 'chat_server: got connection %d from %s' % (client.fileno(), address)
                     # Get client public key and send our public key
-                    publicKey = RSA.importKey(receive(client))
-                    send(client, self.server_publicKey.exportKey())
+                    publicKey = RSA.importKey(receive(connstream))
 
+                    send(connstream, self.server_publicKey.exportKey())
                     # Read the login name
-                    cname = receive(client).split('NAME: ')[1]
-
+                    cname = receive(connstream).split('NAME: ')[1]
+                
                     # Compute client name and send back
                     self.numOfClients += 1
-                    send(client, 'CLIENT: ' + str(address[0]))
-                    inputs.append(client)
+                    send(connstream, 'CLIENT: ' + str(address[0]))
+                    inputs.append(connstream)
 
-                    self.clientmap[client] = (address, cname, publicKey)
+                    self.clientmap[connstream] = (address, cname, publicKey)
 
                     # Send joining information to other clients
-                    msg = '\n(Connected: New client (%d) from %s)' % (self.numOfClients, self.getName(client))
+                    msg = '\n(Connected: New client (%d) from %s)' % (self.numOfClients, self.getName(connstream))
 
                     for o in self.outputs:
                         try:
@@ -126,7 +143,7 @@ class chat_server(object):
                             self.outputs.remove(o)
                             inputs.remove(o)
 
-                    self.outputs.append(client)
+                    self.outputs.append(connstream)
 
                 elif s == sys.stdin:
                     # handle standard input
@@ -186,7 +203,7 @@ class chat_server(object):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) < 3:
-        sys.exit('Usage: %s listen_ip listen_port' % sys.argv[0])
+    if len(sys.argv) < 1:
+        sys.exit('Usage: %s' % sys.argv[0])
 
-    chat_server(sys.argv[1], sys.argv[2]).serve()
+    chat_server().serve()

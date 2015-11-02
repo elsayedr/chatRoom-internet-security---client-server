@@ -24,6 +24,8 @@ def receive(channel):
     buf = ""
 
     while len(buf) < size:
-        buf = channel.recv(size - len(buf))
+        #buf = channel.recv(size - len(buf))
+        buf += channel.recv(size - len(buf))
+
 
     return unmarshall(buf)[0]
