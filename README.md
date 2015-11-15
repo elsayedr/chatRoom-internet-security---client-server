@@ -32,6 +32,7 @@ set4		1234
 Send Message to Multiple Clients
 --------------------------------------------
 Message to be Entered at the Command Prompt follows this format:
+
 [set3@127.0.0.1]>1 set Testingsend 
 	-- sends message 'Testingsend' to '1' client named 'set'
 [set3@127.0.0.1]>2 set set2 Testingsend 
