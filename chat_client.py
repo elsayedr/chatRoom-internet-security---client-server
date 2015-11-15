@@ -5,6 +5,8 @@ import socket
 import sys
 import select
 import ssl
+import getpass
+import hashlib
 
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
@@ -24,13 +26,20 @@ class chat_client(object):
         self.port = 3490
         self.host = 'localhost'
 
+        print "Enter your password"
+        #Encrypt the password
+        self.password = hashlib.sha1(getpass.getpass())
+        #print self.password.hexdigest()
+        #print self.password.digest_size
+
         # Initial prompt
         self.prompt = '[' + '@'.join((name, socket.gethostname().split('.')[0])) + ']> '
 
+        #May not need (Maximus)
         # Generate client certificate
-        print "Generating client certificate"
-        self.createClientCert(self.name)
-        print "Client certificate created"
+        #print "Generating client certificate"
+        #self.createClientCert(self.name)
+        #print "Client certificate created"
 
         client_privateKey = RSA.generate(4096, os.urandom)
         client_pubkey = client_privateKey.publickey()
@@ -49,9 +58,13 @@ class chat_client(object):
             
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-            # Check server certificate
-            self.ssl_sock = self.context.wrap_socket(self.sock, server_hostname=self.host)
-            self.ssl_sock.settimeout(2)
+            try:
+                # Check server certificate
+                self.ssl_sock = self.context.wrap_socket(self.sock, server_hostname=self.host)
+                self.ssl_sock.settimeout(2)
+            except:
+                print "Server certificate invalid, closing chat."
+                exit(0)
 
             self.ssl_sock.connect((self.host, self.port))
             print 'Connected to chat server %s:%d' % (self.host, self.port)
@@ -63,9 +76,19 @@ class chat_client(object):
             # Send my name...
             send(self.ssl_sock, 'NAME: ' + self.name)
 
+            # Send my password...
+            send(self.ssl_sock, 'PASSWORD: ' + self.password.hexdigest())
+            #send(self.ssl_sock, 'PASSWORD: ' + self.password)
+            # Print out users connected to server
+            print receive(self.ssl_sock)
+
             data = receive(self.ssl_sock)
             # Contains client address, set it
             addr = data.split('CLIENT: ')[1]
+            if  len(addr) > 15:#Means the server is not sending IP address of client
+                print 'Password Verification Failed'
+                print addr
+                exit(0)
             self.prompt = '[' + '@'.join((self.name, addr)) + ']> '
 
         except socket.error:
@@ -140,8 +163,8 @@ class chat_client(object):
 
 if __name__ == "__main__":
 
-    if len(sys.argv) < 1:
-        sys.exit('Usage: %s username' % sys.argv[0])
+    if len(sys.argv) < 2:
+        sys.exit('Usage: python %s username' % sys.argv[0])
 
     client = chat_client(sys.argv[1])
     client.cmdloop()
