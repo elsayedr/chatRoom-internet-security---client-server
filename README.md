@@ -7,6 +7,7 @@ python chat_server.py
 Run the Client
 --------------------------------------------
 python chat_client.py username
+
 For example, python chat_client.py rew
 
 --------------------------------------------
