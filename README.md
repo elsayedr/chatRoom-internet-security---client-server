@@ -1,4 +1,5 @@
 #813 Internet Security Chat Project
+#Authors: Maximus Brandel, Ibrahim Elsayed, Phani Soumya Inguva, and Ibrahim Alkhalifah
 This is an open source client/server chat program we found that had no security implemented.
 Our goal was to implement three security principles, confidentiality, integrity, and authentication.
 
