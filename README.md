@@ -3,8 +3,9 @@
 This is an open source client/server chat program we found that had no security implemented.
 Our goal was to implement three security principles, confidentiality, integrity, and authentication.
 
-We achieved confidentiality in one way:
+We achieved confidentiality in two ways:
 1.  RSA encryption:  The client and server both exchange their public keys.  They then use each others keys to encrypt their data between each other.  Once they have received their data, they then use their private keys to decrypt the data.  
+2.  Messages for specific users:  A user can send a specific set of users a message intended only for them by typing a number which indicates how many users to send the message to, followed by their usernames, then followed by the message. Our program allows a user to send a message to all users who are connected by typing a "0" before the message.  We have included an example below showing the format for sending a message.
 
 We achieved integrity in one way:
 1.  SHA512:  We encrypt a message, append a signature using SHA512 to create a message digest, and finally sign it with our private key.  
