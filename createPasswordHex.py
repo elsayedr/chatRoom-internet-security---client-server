@@ -11,7 +11,7 @@ for i in range(0, iterations):
 	username = raw_input("Please Enter User to save: ")
 	password = getpass.getpass()
 	#Writing username and password to file
-	f.write('{}::{}\n'.format(username, hashlib.sha1(password).hexdigest()))
+	f.write('{}::{}\n'.format(username, hashlib.sha512(password).hexdigest()))
 f.close()
 print "Successfully created password hex digest for users!"
 print "File is called " + FILENAME

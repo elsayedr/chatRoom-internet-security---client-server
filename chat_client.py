@@ -10,7 +10,7 @@ import hashlib
 
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
-from Crypto.Hash import SHA
+from Crypto.Hash import SHA512
 
 from communication import send, receive
 
@@ -28,7 +28,7 @@ class chat_client(object):
 
         print "Enter your password"
         #Encrypt the password
-        self.password = hashlib.sha1(getpass.getpass())
+        self.password = hashlib.sha512(getpass.getpass())
         #print self.password.hexdigest()
         #print self.password.digest_size
 
@@ -48,13 +48,13 @@ class chat_client(object):
 
         # Connect to server at port
         try:
-            self.context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+            self.context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
             self.context.verify_mode = ssl.CERT_REQUIRED
             self.context.check_hostname = True
 
+            #Get the servers CA certificate
             file_location = os.getcwd()
             self.context.load_verify_locations(file_location + "/server.crt")
-
             
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -65,6 +65,9 @@ class chat_client(object):
             except:
                 print "Server certificate invalid, closing chat."
                 exit(0)
+
+            #Check cipher used, we expect none since we didn't specify any
+            #print self.ssl_sock.cipher()
 
             self.ssl_sock.connect((self.host, self.port))
             print 'Connected to chat server %s:%d' % (self.host, self.port)
@@ -116,7 +119,7 @@ class chat_client(object):
 
                             # append signature
                             signkey = self.decryptor
-                            message_hash = SHA.new()
+                            message_hash = SHA512.new()
                             message_hash.update(data)
 
                             signer = PKCS1_PSS.new(signkey)

@@ -1,3 +1,19 @@
+#813 Internet Security Chat Project
+This is an open source client/server chat program we found that had no security implemented.
+Our goal was to implement three security principles, confidentiality, integrity, and authentication.
+
+We achieved confidentiality in one way:
+1.  RSA encryption:  The client and server both exchange their public keys.  They then use each others keys to encrypt their data between each other.  Once they have received their data, they then use their private keys to decrypt the data.  
+
+We achieved integrity in one way:
+1.  SHA512:  We encrypt a message, append a signature using SHA512 to create a message digest, and finally sign it with our private key.  
+
+We achieved authentication in two ways:  
+1.  Certificates: We have a script that creates a server certificate and private key.  Using SSL allows us to easily have the client verify that they are indeed talking to the server by checking the server's certificate. 
+2.  Passwords: We created a script that will create a hex digest of the users passwords using SHA512 and are stored in a file for the server to access.  The client then creates a hex digest of the password entered when prompted and sends that to the server for verification.  Since this program was more about testing security, we didn't worry about the server/client creating a password and storing it in a database.  We assume that the passwords/usernames are stored in passwordHex.txt for access by the server. 
+
+#How to use our code
+
 #User Authentication
 We have created a script to create a hex digest of a password for a given user.
 You should run that first if you want to try your own usernames and passwords.
@@ -23,9 +39,9 @@ Message to be Entered at the Command Prompt follows this format:
 
 [maximus@127.0.0.1]>1 phani This is a message. 
 	-- sends message 'This is a message' to '1' client named 'phani'
-[set3@127.0.0.1]>2 phani ibrahim This is a message. 
+[maximus@127.0.0.1]>2 phani ibrahim This is a message. 
 	-- sends message 'This is a message.' to '2' clients named 'phani' and 'ibrahim'
-[set3@127.0.0.1]>0 This is a message. 
+[maximus@127.0.0.1]>0 This is a message. 
 	-- sends message 'This is a message.' to all connected clients
 
 Error message occurs if you try to send a message to a user who isn't logged in.

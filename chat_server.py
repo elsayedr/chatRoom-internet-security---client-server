@@ -11,7 +11,7 @@ from time import sleep
 from communication import send, receive
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
-from Crypto.Hash import SHA
+from Crypto.Hash import SHA512
 
 
 class chat_server(object):
@@ -79,7 +79,7 @@ class chat_server(object):
 	def verifySignature(self, client, message, signature):
 		try:
 			key = self.clientmap[client][2]
-			msg_hash = SHA.new()
+			msg_hash = SHA512.new()
 			msg_hash.update(message)
 
 			verifier = PKCS1_PSS.new(key)
@@ -156,7 +156,7 @@ class chat_server(object):
 					if cpassword == passwordDict.get(cname):
 						print "Username and Password Matched"
 					else:
-						send(connstream, 'CLIENT: USERNAME and Password Doesnt Match')
+						send(connstream, 'CLIENT: Username and/or Password Does Not Match')
 						continue
 					
 					if cname in existingCustomers.values():
