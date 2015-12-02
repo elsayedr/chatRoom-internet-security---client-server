@@ -7,10 +7,10 @@ python chat_client.py username
 For example, python chat_client.py maximus
 
 #Existing Authentication  
-#UserName	Password
-maximus		111
-ibrahim		222
-phani		333
+#UserName Password
+maximus     111
+ibrahim     222
+phani       333
 
 #Send Message to Multiple Clients
 Message to be Entered at the Command Prompt follows this format:
