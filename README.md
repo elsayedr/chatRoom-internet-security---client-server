@@ -8,9 +8,9 @@ For example, python chat_client.py maximus
 
 #Existing Authentication  
 #UserName Password
-maximus     111/n
-ibrahim     222/n
-phani       333/n
+maximus	    111
+ibrahim     222
+phani       333
 
 #Send Message to Multiple Clients
 Message to be Entered at the Command Prompt follows this format:
