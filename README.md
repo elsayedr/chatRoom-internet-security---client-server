@@ -1,29 +1,18 @@
--------------------------------------------
-Run the Server
---------------------------------------------
+#Run the Server
 python chat_server.py 
 
---------------------------------------------
-Run the Client
---------------------------------------------
+#Run the Client
 python chat_client.py username
 
 For example, python chat_client.py maximus
 
---------------------------------------------
-Existing Authentication  
---------------------------------------------
-UserName	Password
-----------------------------
+#Existing Authentication  
+#UserName	Password
 maximus		111
 ibrahim		222
 phani		333
---------------------------------------------
 
-
---------------------------------------------
-Send Message to Multiple Clients
---------------------------------------------
+#Send Message to Multiple Clients
 Message to be Entered at the Command Prompt follows this format:
 
 [maximus@127.0.0.1]>1 phani This is a message. 
@@ -34,4 +23,3 @@ Message to be Entered at the Command Prompt follows this format:
 	-- sends message 'This is a message.' to all connected clients
 
 Error message occurs if you try to send a message to a user who isn't logged in.
---------------------------------------------
