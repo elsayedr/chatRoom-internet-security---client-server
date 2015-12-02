@@ -99,13 +99,25 @@ class chat_server(object):
 			return lookup(dic.get(key, {}), *keys)
 		return dic.get(key)
 
+	# Function to read user and passwords from file
+	def read_passwords(self, filename):
+	    try:
+	    	with open(filename, 'r') as f2:
+	            return [x.strip() for x in f2.readlines()]
+	    except:
+	        print("There was a problem reading the file!")
+
 	def serve(self):
 		inputs = [self.server, sys.stdin]
 		self.outputs = []
 
 		#Create a password and Username Dictionary
-		passwordDict = {'rew': hashlib.sha1('123456'), 'set': hashlib.sha1('1230'), 'rew1': hashlib.sha1('23456'), 'set1': hashlib.sha1('1231'), 'rew2': hashlib.sha1('13456'), 'set2': hashlib.sha1('1232'), 'rew3': hashlib.sha1('12456'), 'set3': hashlib.sha1('1233'), 'rew4': hashlib.sha1('12356'), 'set4': hashlib.sha1('1234')}
+		#passwordDict = {'rew': hashlib.sha1('123456'), 'set': hashlib.sha1('1230'), 'rew1': hashlib.sha1('23456'), 'set1': hashlib.sha1('1231'), 'rew2': hashlib.sha1('13456'), 'set2': hashlib.sha1('1232'), 'rew3': hashlib.sha1('12456'), 'set3': hashlib.sha1('1233'), 'rew4': hashlib.sha1('12356'), 'set4': hashlib.sha1('1234')}
 		
+		FILENAME = 'passwordHex.txt'
+		# Converting data to dict where the key is the user and the value is the hashed password
+		passwordDict = dict([x.split('::') for x in self.read_passwords(FILENAME)])
+
 		existingCustomers = {}
 
 		running = 1
@@ -140,7 +152,8 @@ class chat_server(object):
 					#if hashlib.sha1(cpassword).hexdigest() == passwordDict.get(cname).hexdigest():
 					# Get hexdigest of clients password and see if it matches
 					# our hexdigest
-					if cpassword == passwordDict.get(cname).hexdigest():
+					# if cpassword == passwordDict.get(cname).hexdigest():
+					if cpassword == passwordDict.get(cname):
 						print "Username and Password Matched"
 					else:
 						send(connstream, 'CLIENT: USERNAME and Password Doesnt Match')

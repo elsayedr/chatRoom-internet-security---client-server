@@ -1,3 +1,12 @@
+#User Authentication
+We have created a script to create a hex digest of a password for a given user.
+You should run that first if you want to try your own usernames and passwords.
+Else, you can just run it with the given passwordHex.txt contents:
+username, password
+maximus, 111
+ibrahim, 222
+phani, 333
+
 #Run the Server
 python chat_server.py 
 
@@ -5,12 +14,9 @@ python chat_server.py
 python chat_client.py username
 
 For example, python chat_client.py maximus
+You will then be prompted to enter the password, which is 111 for maximus
 
-#Existing Authentication  
-#UserName Password
-maximus	    111
-ibrahim     222
-phani       333
+You should run at least two clients if you want to try and send a message.
 
 #Send Message to Multiple Clients
 Message to be Entered at the Command Prompt follows this format:
