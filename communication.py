@@ -16,6 +16,7 @@ def receive(channel):
 
     size = struct.calcsize("L")
     size = channel.recv(size)
+
     try:
         size = socket.ntohl(struct.unpack("L", size)[0])
     except struct.error, e:
@@ -24,6 +25,8 @@ def receive(channel):
     buf = ""
 
     while len(buf) < size:
-        buf = channel.recv(size - len(buf))
+        #buf = channel.recv(size - len(buf))
+        buf += channel.recv(size - len(buf))
+
 
     return unmarshall(buf)[0]
